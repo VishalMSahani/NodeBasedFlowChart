@@ -31,10 +31,33 @@ const onEdgeClick = () => {
     setEdges((edges) => edges.filter((edge) => edge.id !== id));
   };
 
+  const handleMouseEnter = () => {
+    setEdges((edges) =>
+      edges.map((edge) =>
+        edge.id === id ? { ...edge, type: 'button' } : edge
+      )
+    );
+  };
+
+  const handleMouseLeave = () => {
+    setEdges((edges) =>
+      edges.map((edge) =>
+        edge.id === id ? { ...edge, type: 'default' } : edge
+      )
+    );
+  };
+
 
   return (
     <>
-      <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
+      <BaseEdge 
+        path={edgePath}
+        markerEnd={markerEnd}
+        style={style}
+        className="custom-edge"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      />
       <EdgeLabelRenderer>
         <div 
           style={{

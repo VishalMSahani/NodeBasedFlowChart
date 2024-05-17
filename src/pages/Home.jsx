@@ -9,10 +9,10 @@ import {  Background,
           useEdgesState,
           addEdge,          
           Panel,
-          Handle
+          Handle,
+          getConnectedEdges,
          } from 'reactflow';
 import CrossEdge from '../components/CrossEdge';
-import CircleNode from '../components/CircleNode';
 import { FaCopy } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import { RxCross2 } from "react-icons/rx";
@@ -27,8 +27,11 @@ const initialNodes = [
 ]
 
 const initialEdges = [
-  { id: 'e1-2', source: '1', sourceHandle: 'a',
-    target: '2', type: 'button',
+  { id: 'e1-2',
+    source: '1',
+    sourceHandle: 'a',
+    target: '2',
+    type: 'button',
     markerEnd:{type:MarkerType.Arrow} },
 ];
 
@@ -36,25 +39,29 @@ const edgeTypes = {
   button: CrossEdge
 }
 
-const nodeTypes = {
-  circle: CircleNode
-}
-
 function Home() {
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [ispopupVisible, setIspopupVisible] = useState(false)
+  const [ispopupVisible, setIspopupVisible] = useState(false);
+  const [selectedNodeId, setSelectedNodeId] = useState(null);
 
-  const onConnect = useCallback((params) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
+
+  const onConnect = useCallback(
+    (params) => {
+     
+      const newEdge = { ...params, type: 'button' };
+      setEdges((eds) => addEdge(newEdge, eds));
+    },
+    [setEdges]
+  );
 
   const [editValue, setEditValue] = useState(nodes.data)
-  const [id, setId] = useState()
 
   //edit function
   const onNodeClick = (e, val) => {
     setEditValue(val.data.label)
-    setId(val.id)
+    setSelectedNodeId(val.id)
     setIspopupVisible(true)
   }
   //handle Change
@@ -65,7 +72,7 @@ function Home() {
   //handle Function
   const handleEdit =()=>{
     const res=nodes.map((item)=>{
-      if(item.id===id){
+      if(item.id=== selectedNodeId){
         item.data={
           ...item.data,
           label:editValue
@@ -77,6 +84,17 @@ function Home() {
     setEditValue('')
     setIspopupVisible(false)
   }
+
+     // Handle Delete
+  const handleDelete = () => {
+    const newNodes = nodes.filter((node) => node.id !== selectedNodeId);
+    const connectedEdges = getConnectedEdges([{ id: selectedNodeId }], edges);
+    const newEdges = edges.filter((edge) => !connectedEdges.includes(edge));
+
+    setNodes(newNodes);
+    setEdges(newEdges);
+    setIspopupVisible(false);
+  };
   
   const onAdd = useCallback(() => {
     const newNode = {
@@ -103,7 +121,7 @@ function Home() {
     <label className="block text-gray-700 mb-2 text-xl font-semibold">Single Choice</label>
     <div className='flex gap-2'>
       <button><FaCopy /></button>
-      <button><MdDelete color='red'/></button>
+      <button onClick={handleDelete}><MdDelete color='red'/></button>
       <button onClick={()=> setIspopupVisible(false)}><RxCross2 /></button>
       
     </div>
@@ -144,7 +162,7 @@ function Home() {
        onEdgesChange={onEdgesChange}
        onConnect={onConnect}
        edgeTypes={edgeTypes}
-       nodeTypes={nodeTypes}
+       handleDelete={handleDelete}
       >
 
     
